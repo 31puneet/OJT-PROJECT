@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block header %}Overview{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-gray-500 text-sm">Total Pages</p>
+                <h3 class="text-3xl font-bold text-gray-700">{{ pages.count }}</h3>
+            </div>
+            <div class="text-blue-200 text-4xl"><i class="fas fa-copy"></i></div>
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-gray-500 text-sm">Active User</p>
+                <h3 class="text-xl font-bold text-gray-700">{{ user.username }}</h3>
+            </div>
+            <div class="text-green-200 text-4xl"><i class="fas fa-user-check"></i></div>
+        </div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-gray-500 text-sm">System Status</p>
+                <h3 class="text-lg font-bold text-green-600">Online</h3>
+            </div>
+            <div class="text-purple-200 text-4xl"><i class="fas fa-server"></i></div>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="text-lg font-semibold text-gray-700">Your Pages</h3>
+        <a href="{% url 'create_page' %}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm transition">
+            <i class="fas fa-plus mr-1"></i> New Page
+        </a>
+    </div>
+    
+    <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Title</th>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Last Updated</th>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for page in pages %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="px-6 py-4">
+                    <div class="font-medium text-gray-800">{{ page.title }}</div>
+                    <div class="text-xs text-gray-500">Created by: {{ page.created_by.username }}</div>
+                    {% if page.category %}
+                    <span class="mt-1 inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{{ page.get_category_display }}</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4">
+                    {% if page.status == 'published' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Published</span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Draft</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 text-gray-500 text-sm">{{ page.last_updated|timesince }} ago</td>
+                <td class="px-6 py-4 flex gap-3">
+                    <a href="{% url 'history' page.id %}" class="text-blue-600 hover:text-blue-800 text-sm" title="History"><i class="fas fa-history"></i></a>
+                    <a href="{% url 'edit_page' page.id %}" class="text-gray-500 hover:text-gray-700 text-sm" title="Edit"><i class="fas fa-edit"></i></a>
+                    <a href="{% url 'delete_page' page.id %}" onclick="return confirm('Delete this page? This cannot be undone.');" class="text-red-500 hover:text-red-700 text-sm" title="Delete"><i class="fas fa-trash"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="px-6 py-8 text-center text-gray-500">No pages found. Create one to get started!</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block header %}{{ title }}{% endblock %}
+
+{% block content %}
+<form method="post" enctype="multipart/form-data" class="h-full flex flex-col md:flex-row gap-6">
+    {% csrf_token %}
+    
+    <!-- LEFT COLUMN: The Writing Zone (75%) -->
+    <div class="flex-1 bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+        <!-- Title Input -->
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-100">
+            {{ form.title }}
+        </div>
+        
+        <!-- Content Editor -->
+        <div class="flex-1 overflow-y-auto">
+            {{ form.content }}
+        </div>
+        
+        <!-- Footer Bar -->
+        <div class="bg-gray-50 px-6 py-3 text-xs text-gray-500 flex justify-between items-center border-t border-gray-200">
+            <span class="flex items-center"><i class="fab fa-markdown mr-2 text-lg text-blue-500"></i> Markdown Supported</span>
+            <span id="char-count" class="font-mono bg-gray-200 px-2 py-1 rounded">0 chars</span>
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN: Settings Panel (25%) -->
+    <div class="w-full md:w-80 space-y-6">
+        
+        <!-- 1. Publish Actions -->
+        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 text-sm uppercase tracking-wide">Publishing</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Status</label>
+                    {{ form.status }}
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md flex items-center justify-center">
+                    <i class="fas fa-save mr-2"></i> Save Page
+                </button>
+                
+                <a href="{% url 'dashboard' %}" class="block w-full text-center text-gray-400 hover:text-red-500 text-sm py-2 transition">
+                    Cancel & Return
+                </a>
+            </div>
+        </div>
+
+        <!-- 2. Organization -->
+        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 text-sm uppercase tracking-wide">Organization</h3>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase mb-1 block">Category</label>
+                {{ form.category }}
+            </div>
+        </div>
+
+        <!-- 3. Cover Image (Custom UI) -->
+        <div class="bg-white p-5 rounded-lg shadow-sm border border-gray-100">
+            <h3 class="font-bold text-gray-800 mb-4 border-b pb-2 text-sm uppercase tracking-wide">Cover Image</h3>
+            
+            <!-- This Hidden Div holds the real Django fields -->
+            <div class="hidden">
+                {{ form.cover_image }}
+            </div>
+
+            <!-- PREVIEW AREA (Initially hidden via JS if no image) -->
+            <div id="image-preview-box" class="relative group mb-4 {% if not form.instance.cover_image %}hidden{% endif %}">
+                <!-- The Image -->
+                <img id="preview-img" 
+                     src="{% if form.instance.cover_image %}{{ form.instance.cover_image.url }}{% else %}#{% endif %}" 
+                     class="w-full h-40 object-cover rounded-lg shadow-sm border border-gray-200">
+                
+                <!-- The Red Cross Button -->
+                <button type="button" onclick="removeImage()" 
+                        class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg transition transform hover:scale-110">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- CHOOSE IMAGE BUTTON (Custom Label) -->
+            <!-- The 'for' attribute links this button to the hidden input -->
+            <label id="upload-btn-label" for="id_cover_image" 
+                   class="cursor-pointer w-full bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-900 font-bold py-3 px-4 rounded-lg border-2 border-indigo-200 border-dashed flex flex-col items-center justify-center transition {% if form.instance.cover_image %}hidden{% endif %}">
+                <i class="fas fa-cloud-upload-alt text-2xl mb-1"></i>
+                <span>Choose Image</span>
+            </label>
+        </div>
+    </div>
+</form>
+
+<script>
+    // --- 1. Character Counter ---
+    const textarea = document.querySelector('textarea');
+    const counter = document.getElementById('char-count');
+    if (textarea) {
+        // Set initial count
+        counter.textContent = textarea.value.length + " chars";
+        textarea.addEventListener('input', function() {
+            counter.textContent = this.value.length + " chars";
+        });
+    }
+
+    // --- 2. Custom Image Logic ---
+    const fileInput = document.getElementById('id_cover_image');
+    const previewBox = document.getElementById('image-preview-box');
+    const previewImg = document.getElementById('preview-img');
+    const uploadBtn = document.getElementById('upload-btn-label');
+
+    // When user selects a file
+    if (fileInput) {
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    previewBox.classList.remove('hidden'); // Show Preview
+                    uploadBtn.classList.add('hidden');     // Hide Button
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // When user clicks the Red Cross
+    function removeImage() {
+        // 1. Clear the input value (for new uploads)
+        if (fileInput) fileInput.value = "";
+        
+        // 2. Hide Preview, Show Button
+        previewBox.classList.add('hidden');
+        uploadBtn.classList.remove('hidden');
+        previewImg.src = "#";
+
+        // 3. Handle Django's "Clear" Checkbox (For existing images)
+        // Django creates a checkbox named 'cover_image-clear' for existing files
+        const clearCheckbox = document.querySelector('input[name="cover_image-clear"]');
+        if (clearCheckbox) {
+            clearCheckbox.checked = true; // Checking this tells Django to delete the file
+        }
+    }
+</script>
+{% endblock %}
