@@ -15,6 +15,7 @@ urlpatterns = [
     path('delete/<int:page_id>/', views.delete_page, name='delete_page'),
     path('history/<int:page_id>/', views.history_list, name='history'),
     path('', lambda request: redirect('/dashboard/')),
+    path('accounts/', include('django.contrib.auth.urls')),
     
     # === CORRECT URL PATTERN ===
     path('compare/', views.compare_view, name='compare'),
