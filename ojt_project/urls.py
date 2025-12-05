@@ -14,6 +14,7 @@ urlpatterns = [
     path('edit/<int:page_id>/', views.edit_page, name='edit_page'),
     path('delete/<int:page_id>/', views.delete_page, name='delete_page'),
     path('history/<int:page_id>/', views.history_list, name='history'),
+    path('', lambda request: redirect('/dashboard/')),
     
     # === CORRECT URL PATTERN ===
     path('compare/', views.compare_view, name='compare'),
